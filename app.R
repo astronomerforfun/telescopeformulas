@@ -1,69 +1,82 @@
-
-
+library(shinythemes)
 library(shiny)
 library(DT)
 
-source("KingCountyScriptscratch.R", local = TRUE)
 # Define UI for application that draws a histogram
-ui <- fluidPage(
-   
-   # Application title
-   titlePanel("KING COUNTY CRIME"),
-   
-   # Sidebar with a slider input for number of bins 
-   sidebarLayout(
-      sidebarPanel(
-        dateRangeInput("dte", "Date Range", start = "2017-01-01"),
-        selectInput("cty", "City", selected = "AUBURN", choices = sort(unique(df$city), decreasing = F)),
-         selectInput("type",
-                     "Incident Types",
-                     selected = NULL, choices = sort(unique(df$incident_description), decreasing = F)
-                     )
-      ),
+ui <- navbarPage(
+  theme = shinytheme("cosmo"),
+  title = "TELESCOPE FORMULAS",
+  tabPanel("DATA",
+           sidebarLayout(
+             sidebarPanel(
+              sliderInput("length", "Length of Telscope in mm", min = 100, max = 3000, value = 750, step = 50),
+              sliderInput("aparture", "Aparture in mm", min = 50, max = 500, value = 100, step = 10),
+              sliderInput("eyepiece", "Eyepiece in mm", min = 5, max = 56, value = 24, step = 1),
+              sliderInput("fov", "FOV of Eyepiece in degrees", min = 30, max = 120, value = 50, step = 1),
+               textInput("words", "Search")
 
-   
-      # Show a plot of the generated distribution
-      mainPanel(
-        dataTableOutput("table"),
-        leafletOutput("map")
-         
-      )
-   )
+),
+mainPanel(
+  # fluidRow(csvDownloadUI("dwnld", "DOWNLOAD"), style = "padding:10px"),
+  textOutput("data"),
+  textOutput('data3'),
+  textOutput('data4'),
+  textOutput('data5'),
+  dataTableOutput("table2")
 )
+  
+)
+           ))
+
+
 
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-
-#reactive for table based on dates
-tablereact <- reactive({
-  df_cty_auburn <- df%>%
-    filter(incident_datetime >= input$dte[1] & incident_datetime <= input$dte[2], city == input$cty)%>%
-    group_by(incident_description)%>%
-    summarise(n = n())
-  return(df_cty_auburn)
+   
+fratio <- reactive({
+  x <- input$length/input$aparture
+  return(x)
 })
 
-output$table <- renderDataTable({
-  datatable(tablereact(), rownames = F)
+fieldofview <- reactive({
+y <- input$fov/input$eyepiece
+return(y)
 })
 
-date_map_react <- reactive({
-  df_map <- df%>%
-    filter(incident_datetime >= input$dte[1] & incident_datetime <= input$dte[2], incident_description == input$type, city == input$cty)
-  print(df_map)
+mag <- reactive({
+  z <- input$length/input$eyepiece
+  return(z)
+})
+tvof <- reactive({
+  mag <- input$length/input$eyepiece
+  h <- input$fov/mag
+  return(h)
+})
+exitpupil <- reactive({
+  a <- input$eyepiece/fratio()
+  return(a)
+})
+output$data <- renderText({
+  fratio()
+  paste("Fratio is", fratio())
 })
 
 
+output$data4 <- renderText({
+  tvof()
+  paste("True Field of View is", tvof(), "degrees")
+})
 
-output$map <- renderLeaflet({
-  leaflet(data = date_map_react())%>% 
-    addTiles()%>%
-    addMarkers(~longitude, ~latitude, popup = ~paste(address_1, day_of_week, hour_of_day, incident_datetime))
-  
+output$data5 <- renderText({
+  mag()
+  paste("Magnification is", mag())
+})
+output$data3 <- renderText({
+  exitpupil()
+  paste("Exit Pupil is", exitpupil(), "degrees")
 })
 }
-
 # Run the application 
 shinyApp(ui = ui, server = server)
 

@@ -34,4 +34,4 @@ Author: Brian Ripley [aut, cre, cph],
 Maintainer: Brian Ripley <ripley@stats.ox.ac.uk>
 Repository: CRAN
 Date/Publication: 2017-02-26 10:01:42
-Built: R 3.4.3; x86_64-apple-darwin15.6.0; 2017-12-07 02:10:43 UTC; unix
+Built: R 3.4.0; x86_64-apple-darwin15.6.0; 2017-04-21 20:31:36 UTC; unix
